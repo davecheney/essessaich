@@ -1,0 +1,5 @@
+Usage
+=====
+
+make && ./essessaich -u $USERNAME -p $PASSWORD -h "localhost:22"
+
