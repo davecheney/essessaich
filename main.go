@@ -3,6 +3,7 @@ package main
 import (
 	"exp/ssh"
 	"flag"
+	"io"
 	"log"
 	"os"
 )
@@ -19,43 +20,36 @@ func init() {
 
 func main() {
 	config := &ssh.ClientConfig{
-		User: *USER,
-		Password: *PASS,
-		SupportedKexAlgos:[]string{"diffie-hellman-group14-sha1"}, 
-		SupportedHostKeyAlgos:[]string{"ssh-rsa"}, 
-		SupportedCiphers:[]string{"aes128-ctr"}, 
-		SupportedMACs:[]string{"hmac-sha1-96"}, 
-		SupportedCompressions:[]string{"none"},
+		User:                  *USER,
+		Password:              *PASS,
+		SupportedKexAlgos:     []string{"diffie-hellman-group14-sha1"},
+		SupportedHostKeyAlgos: []string{"ssh-rsa"},
+		SupportedCiphers:      []string{"aes128-ctr"},
+		SupportedMACs:         []string{"hmac-sha1-96"},
+		SupportedCompressions: []string{"none"},
 	}
 	client, err := ssh.Dial(*HOST, config)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer client.Close()
+	log.Printf("Connected to %s", client.RemoteAddr())
 	shell, err := client.OpenChan("session")
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := shell.Shell(); err != nil {
+	if err := shell.Ptyreq("vt100", 80, 25) ; err != nil {
 		log.Fatal(err)
 	}
-	go func() {
-		for {
-			buf := make([]byte, 4096)
-			read, err := os.Stdin.Read(buf)
-			if err != nil {
-				log.Fatal(err)
-			}
-			shell.Write(buf[:read])
-		}
-	}()
-	for {
-		buf := make([]byte, 4096)
-		read, err := shell.Read(buf)
-		if err != nil {
-			log.Fatal(err)
-		}
-		os.Stdout.Write(buf[:read])
+	stdin, stdout, stderr, err := shell.Shell()
+	if err != nil {
+		log.Fatal(err)
 	}
-	
+	log.Println("Shell opened")
+	go io.Copy(os.Stderr, stderr)
+	go io.Copy(os.Stdin, stdout)
+        if _, err := io.Copy(stdin, os.Stdout); err != nil {
+		log.Fatal(err)
+	}
+
 }
