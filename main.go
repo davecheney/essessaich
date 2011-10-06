@@ -38,7 +38,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := shell.Ptyreq("vt100", 80, 25) ; err != nil {
+	if err := shell.Ptyreq("vt100", 80, 25); err != nil {
 		log.Fatal(err)
 	}
 	stdin, stdout, stderr, err := shell.Shell()
@@ -48,7 +48,7 @@ func main() {
 	log.Println("Shell opened")
 	go io.Copy(os.Stderr, stderr)
 	go io.Copy(os.Stdin, stdout)
-        if _, err := io.Copy(stdin, os.Stdout); err != nil {
+	if _, err := io.Copy(stdin, os.Stdout); err != nil {
 		log.Fatal(err)
 	}
 
