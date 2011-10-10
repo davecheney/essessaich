@@ -16,6 +16,10 @@ var (
 
 func init() {
 	flag.Parse()
+	if len(*USER) == 0 || len(*PASS) == 0 || len(*HOST) == 0 {
+		flag.Usage()
+		os.Exit(1)
+	}
 }
 
 func main() {
@@ -34,6 +38,8 @@ func main() {
 	}
 	defer client.Close()
 	log.Printf("Connected to %s", client.RemoteAddr())
+	// open a few channels to bring the id and peerid's out of sync
+	client.OpenChan("session") ; client.OpenChan("session")
 	shell, err := client.OpenChan("session")
 	if err != nil {
 		log.Fatal(err)
