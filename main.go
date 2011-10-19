@@ -26,13 +26,8 @@ func main() {
 	config := &ssh.ClientConfig{
 		User:                  *USER,
 		Password:              *PASS,
-		SupportedKexAlgos:     []string{"diffie-hellman-group14-sha1"},
-		SupportedHostKeyAlgos: []string{"ssh-rsa"},
-		SupportedCiphers:      []string{"aes128-ctr"},
-		SupportedMACs:         []string{"hmac-sha1-96"},
-		SupportedCompressions: []string{"none"},
 	}
-	client, err := ssh.Dial(*HOST, config)
+	client, err := ssh.Dial("tcp", *HOST, config)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,17 +39,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := shell.Ptyreq("vt100", 80, 25); err != nil {
+	if err := shell.RequestPty("vt100", 80, 25); err != nil {
 		log.Fatal(err)
 	}
-	stdin, stdout, stderr, err := shell.Shell()
+	cmd, err := shell.Shell()
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Println("Shell opened")
-	go io.Copy(os.Stderr, stderr)
-	go io.Copy(os.Stdin, stdout)
-	if _, err := io.Copy(stdin, os.Stdout); err != nil {
+	go io.Copy(os.Stderr, cmd.Stderr)
+	go io.Copy(os.Stdin, cmd.Stdout)
+	if _, err := io.Copy(cmd.Stdin, os.Stdout); err != nil {
 		log.Fatal(err)
 	}
 
