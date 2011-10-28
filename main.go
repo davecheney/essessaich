@@ -34,22 +34,33 @@ func main() {
 	defer client.Close()
 	log.Printf("Connected to %s", client.RemoteAddr())
 	// open a few channels to bring the id and peerid's out of sync
-	client.OpenChan("session") ; client.OpenChan("session")
-	shell, err := client.OpenChan("session")
-	if err != nil {
+	if _, err := client.NewSession() ; err != nil {
 		log.Fatal(err)
 	}
+        if _, err := client.NewSession() ; err != nil {
+                log.Fatal(err)
+        }
+        if _, err := client.NewSession() ; err != nil {
+                log.Fatal(err)
+        }
+
+        shell, err := client.NewSession()
+        if err != nil {
+                log.Fatal(err)
+        }
 	if err := shell.RequestPty("vt100", 80, 25); err != nil {
 		log.Fatal(err)
 	}
-	cmd, err := shell.Shell()
-	if err != nil {
+	if err := shell.Exec("/usr/bin/whoami") ; err != nil {
 		log.Fatal(err)
 	}
+        if err := shell.Shell() ; err != nil {
+                log.Fatal(err)
+        }
 	log.Println("Shell opened")
-	go io.Copy(os.Stderr, cmd.Stderr)
-	go io.Copy(os.Stdin, cmd.Stdout)
-	if _, err := io.Copy(cmd.Stdin, os.Stdout); err != nil {
+	go io.Copy(os.Stderr, shell.Stderr)
+	go io.Copy(os.Stdin, shell.Stdout)
+	if _, err := io.Copy(shell.Stdin, os.Stdout); err != nil {
 		log.Fatal(err)
 	}
 
