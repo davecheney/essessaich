@@ -51,9 +51,6 @@ func main() {
 	if err := shell.RequestPty("vt100", 80, 25); err != nil {
 		log.Fatal(err)
 	}
-	if err := shell.Exec("/usr/bin/whoami") ; err != nil {
-		log.Fatal(err)
-	}
         if err := shell.Shell() ; err != nil {
                 log.Fatal(err)
         }
