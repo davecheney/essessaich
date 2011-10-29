@@ -16,7 +16,7 @@ var (
 
 func init() {
 	flag.Parse()
-	if len(*USER) == 0 || len(*PASS) == 0 || len(*HOST) == 0 {
+	if len(*USER) == 0 || len(*HOST) == 0 {
 		flag.Usage()
 		os.Exit(1)
 	}
