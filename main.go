@@ -3,7 +3,6 @@ package main
 import (
 	"exp/ssh"
 	"flag"
-	"io"
 	"log"
 	"os"
 )
@@ -23,10 +22,14 @@ func init() {
 }
 
 func main() {
-	config := &ssh.ClientConfig{
-		User:                  *USER,
-		Password:              *PASS,
+	kc := new(keychain)
+	if err := kc.LoadPEM(os.Getenv("HOME")+"/.ssh/id_rsa") ; err != nil {
+		log.Fatal(err)
 	}
+        config := &ssh.ClientConfig{
+                User:           *USER,
+                Auth: []ssh.ClientAuth{ ssh.ClientAuthPublickey(kc) },
+        }
 	client, err := ssh.Dial("tcp", *HOST, config)
 	if err != nil {
 		log.Fatal(err)
@@ -45,6 +48,9 @@ func main() {
         }
 
         shell, err := client.NewSession()
+	shell.Stdin = os.Stdin
+	shell.Stdout = os.Stdout
+	shell.Stderr = os.Stderr
         if err != nil {
                 log.Fatal(err)
         }
@@ -55,10 +61,5 @@ func main() {
                 log.Fatal(err)
         }
 	log.Println("Shell opened")
-	go io.Copy(os.Stderr, shell.Stderr)
-	go io.Copy(os.Stdin, shell.Stdout)
-	if _, err := io.Copy(shell.Stdin, os.Stdout); err != nil {
-		log.Fatal(err)
-	}
-
+	select {}
 }
