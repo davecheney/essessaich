@@ -1,6 +1,6 @@
 include $(GOROOT)/src/Make.inc
 
-TARG=essessaich
+TARG=gsh
 GOFILES=\
 	keychain.go\
 	main.go\

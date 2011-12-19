@@ -28,14 +28,9 @@ func (p password) Password(user string) (string, error) {
 }
 
 func main() {
-	kc := new(keychain)
-	if err := kc.LoadPEM(os.Getenv("HOME") + "/.ssh/id_rsa"); err != nil {
-		log.Fatal(err)
-	}
 	config := &ssh.ClientConfig{
 		User: *USER,
-		Auth: []ssh.ClientAuth{
-			ssh.ClientAuthPublickey(kc),
+		Auth: []ssh.ClientAuth {
 			ssh.ClientAuthPassword(password(*PASS)),
 		},
 	}
@@ -45,30 +40,13 @@ func main() {
 	}
 	defer client.Close()
 	log.Printf("Connected to %s", client.RemoteAddr())
-	// open a few channels to bring the id and peerid's out of sync
-	if _, err := client.NewSession(); err != nil {
-		log.Fatal(err)
-	}
-	if _, err := client.NewSession(); err != nil {
-		log.Fatal(err)
-	}
-	if _, err := client.NewSession(); err != nil {
-		log.Fatal(err)
-	}
-
-	shell, err := client.NewSession()
-	shell.Stdin = os.Stdin
-	shell.Stdout = os.Stdout
-	shell.Stderr = os.Stderr
+	cmd, err := client.NewSession()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("coult not requets new session: %v", err)	
 	}
-	if err := shell.RequestPty("vt100", 80, 25); err != nil {
-		log.Fatal(err)
+	defer cmd.Close()
+	cmd.Stdout = os.Stdout
+	if err := cmd.Run("uname -a"); err != nil {
+		log.Fatalf("Exec: %v", err)
 	}
-	if err := shell.Shell(); err != nil {
-		log.Fatal(err)
-	}
-	log.Println("Shell opened")
-	select {}
 }
